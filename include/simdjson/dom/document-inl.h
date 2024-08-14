@@ -20,6 +20,10 @@ namespace dom {
 inline element document::root() const noexcept {
   return element(internal::tape_ref(this, 1));
 }
+
+inline element document::element_with_index(size_t json_index) const noexcept {
+  return element(internal::tape_ref(this, json_index));
+}
 simdjson_warn_unused
 inline size_t document::capacity() const noexcept {
   return allocated_capacity;

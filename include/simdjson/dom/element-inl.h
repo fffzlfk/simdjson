@@ -442,6 +442,14 @@ inline bool element::dump_raw_tape(std::ostream &out) const noexcept {
   return tape.doc->dump_raw_tape(out);
 }
 
+inline internal::tape_ref element::get_tape_ref() const noexcept {
+  return tape;
+}
+
+inline void element::set_json_index(size_t json_index) noexcept {
+  tape.json_index = json_index;
+}
+
 
 inline std::ostream& operator<<(std::ostream& out, element_type type) {
   switch (type) {

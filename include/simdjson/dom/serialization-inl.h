@@ -320,6 +320,20 @@ simdjson_inline void mini_formatter::print_space() {
     return;
 }
 
+simdjson_inline void default_formatter::print_newline() {
+    return;
+}
+
+simdjson_inline void default_formatter::print_indents(size_t depth) {
+    (void)depth;
+    return;
+}
+
+simdjson_inline void default_formatter::print_space() {
+    one_char(' ');
+    return;
+}
+
 simdjson_inline void pretty_formatter::print_newline() {
     one_char('\n');
 }
@@ -355,6 +369,7 @@ inline void string_builder<serializer>::append(simdjson::dom::element value) {
     // print commas after each value
     if (after_value) {
       format.comma();
+      format.print_space();
       format.print_newline();
     }
 
@@ -492,6 +507,7 @@ inline void string_builder<serializer>::append(simdjson::dom::object value) {
     append(*pair);
     for (++pair; pair != end; ++pair) {
       format.comma();
+      format.print_space();
       append(*pair);
     }
   }
@@ -507,6 +523,7 @@ inline void string_builder<serializer>::append(simdjson::dom::array value) {
     append(*iter);
     for (++iter; iter != end; ++iter) {
       format.comma();
+      format.print_space();
       append(*iter);
     }
   }

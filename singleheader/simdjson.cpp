@@ -1,4 +1,4 @@
-/* auto-generated on 2024-08-01 09:31:50 -0400. Do not edit! */
+/* auto-generated on 2024-08-01 09:32:54 -0400. Do not edit! */
 /* including simdjson.cpp:  */
 /* begin file simdjson.cpp */
 #define SIMDJSON_SRC_SIMDJSON_CPP
@@ -6577,6 +6577,11 @@ public:
   element root() const noexcept;
 
   /**
+   * Get the element of this document as a JSON array.
+   */
+  element element_with_index(size_t json_index) const noexcept;
+
+  /**
    * @private Dump the raw tape for debugging.
    *
    * @param os the stream to output to.
@@ -6592,6 +6597,8 @@ public:
    * Should be at least byte_capacity.
    */
   std::unique_ptr<uint8_t[]> string_buf{};
+
+  std::size_t string_buf_size;
   /** @private Allocate memory to support
    * input JSON documents of up to len bytes.
    *
@@ -13617,6 +13624,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -13640,7 +13649,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -13688,6 +13699,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -19836,6 +19851,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -19859,7 +19876,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -19907,6 +19926,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -26048,6 +26071,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -26071,7 +26096,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -26119,6 +26146,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -32531,6 +32562,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -32554,7 +32587,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -32602,6 +32637,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -39588,6 +39627,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -39611,7 +39652,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -39659,6 +39702,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -45612,6 +45659,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -45635,7 +45684,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -45683,6 +45734,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -51627,6 +51682,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -51650,7 +51707,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -51698,6 +51757,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}
@@ -55315,6 +55378,8 @@ struct tape_builder {
   /** Called each time a new field or element in an array or object is found. */
   simdjson_warn_unused simdjson_inline error_code increment_count(json_iterator &iter) noexcept;
 
+  simdjson_warn_unused simdjson_inline size_t get_string_buf_size(const json_iterator &iter) noexcept;
+
   /** Next location to write to tape */
   tape_writer tape;
 private:
@@ -55338,7 +55403,9 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::parse_document(
   dom_parser.doc = &doc;
   json_iterator iter(dom_parser, STREAMING ? dom_parser.next_structural_index : 0);
   tape_builder builder(doc);
-  return iter.walk_document<STREAMING>(builder);
+  auto res = iter.walk_document<STREAMING>(builder);
+  doc.string_buf_size = builder.get_string_buf_size(iter);
+  return res;
 }
 
 simdjson_warn_unused simdjson_inline error_code tape_builder::visit_root_primitive(json_iterator &iter, const uint8_t *value) noexcept {
@@ -55386,6 +55453,10 @@ simdjson_warn_unused simdjson_inline error_code tape_builder::visit_key(json_ite
 simdjson_warn_unused simdjson_inline error_code tape_builder::increment_count(json_iterator &iter) noexcept {
   iter.dom_parser.open_containers[iter.depth].count++; // we have a key value pair in the object at parser.dom_parser.depth - 1
   return SUCCESS;
+}
+
+simdjson_warn_unused simdjson_inline size_t tape_builder::get_string_buf_size(const json_iterator &iter) noexcept {
+  return static_cast<size_t>(current_string_buf_loc - (uint8_t*)iter.dom_parser.doc->string_buf.get());
 }
 
 simdjson_inline tape_builder::tape_builder(dom::document &doc) noexcept : tape{doc.tape.get()}, current_string_buf_loc{doc.string_buf.get()} {}

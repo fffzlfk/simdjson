@@ -46,6 +46,11 @@ public:
   element root() const noexcept;
 
   /**
+   * Get the element of this document as a JSON array.
+   */
+  element element_with_index(size_t json_index) const noexcept;
+
+  /**
    * @private Dump the raw tape for debugging.
    *
    * @param os the stream to output to.
@@ -61,6 +66,8 @@ public:
    * Should be at least byte_capacity.
    */
   std::unique_ptr<uint8_t[]> string_buf{};
+
+  std::size_t string_buf_size;
   /** @private Allocate memory to support
    * input JSON documents of up to len bytes.
    *

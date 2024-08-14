@@ -89,6 +89,15 @@ public:
   simdjson_inline void print_space();
 };
 
+class default_formatter : public base_formatter<mini_formatter> {
+public:
+  simdjson_inline void print_newline();
+
+  simdjson_inline void print_indents(size_t depth);
+
+  simdjson_inline void print_space();
+};
+
 class pretty_formatter : public base_formatter<pretty_formatter> {
 public:
   simdjson_inline void print_newline();
@@ -108,7 +117,7 @@ protected:
  * the string_builder template could support both minification
  * and prettification, and various other tradeoffs.
  */
-template <class formatter = mini_formatter>
+template <class formatter = default_formatter>
 class string_builder {
 public:
   /** Construct an initially empty builder, would print the empty string **/
@@ -187,7 +196,7 @@ std::string to_string(T x)   {
     // in C++, to_string is standard: http://www.cplusplus.com/reference/string/to_string/
     // Currently minify and to_string are identical but in the future, they may
     // differ.
-    simdjson::internal::string_builder<> sb;
+    simdjson::internal::string_builder<internal::default_formatter> sb;
     sb.append(x);
     std::string_view answer = sb.str();
     return std::string(answer.data(), answer.size());
