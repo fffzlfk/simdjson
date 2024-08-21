@@ -473,7 +473,8 @@ public:
   /** @private for debugging. Prints out the root element. */
   inline bool dump_raw_tape(std::ostream &out) const noexcept;
 
-  inline const document* get_document(size_t &json_index) const noexcept;
+  inline const document* get_document() const noexcept;
+  inline size_t get_json_index() const noexcept;
 
 private:
   simdjson_inline element(const internal::tape_ref &tape) noexcept;

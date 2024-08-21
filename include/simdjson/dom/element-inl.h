@@ -442,9 +442,12 @@ inline bool element::dump_raw_tape(std::ostream &out) const noexcept {
   return tape.doc->dump_raw_tape(out);
 }
 
-inline const document* element::get_document(size_t &json_index) const noexcept {
-  json_index = tape.json_index;
+inline const document* element::get_document() const noexcept {
   return tape.doc;
+}
+
+inline size_t element::get_json_index() const noexcept {
+  return tape.json_index;
 }
 
 inline std::ostream& operator<<(std::ostream& out, element_type type) {
