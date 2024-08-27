@@ -23,6 +23,8 @@ public:
   document() noexcept = default;
   ~document() noexcept = default;
 
+  document(uint64_t *raw_tape_ptr, uint8_t *raw_sb_ptr, size_t sb_size) noexcept;
+
   /**
    * Take another document's buffers.
    *
@@ -44,11 +46,6 @@ public:
    * Get the root element of this document as a JSON array.
    */
   element root() const noexcept;
-
-  /**
-   * Get the element of this document as a JSON array.
-   */
-  element element_with_index(size_t json_index) const noexcept;
 
   /**
    * @private Dump the raw tape for debugging.

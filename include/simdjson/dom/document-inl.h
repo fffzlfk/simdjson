@@ -21,9 +21,8 @@ inline element document::root() const noexcept {
   return element(internal::tape_ref(this, 1));
 }
 
-inline element document::element_with_index(size_t json_index) const noexcept {
-  return element(internal::tape_ref(this, json_index));
-}
+inline document::document(uint64_t *raw_tape_ptr, uint8_t *raw_sb_ptr, size_t sb_size) noexcept : tape(raw_tape_ptr), string_buf(raw_sb_ptr), string_buf_size(sb_size) {}
+
 simdjson_warn_unused
 inline size_t document::capacity() const noexcept {
   return allocated_capacity;

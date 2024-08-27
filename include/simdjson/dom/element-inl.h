@@ -12,6 +12,7 @@
 
 #include <ostream>
 #include <limits>
+#include <vector>
 
 namespace simdjson {
 
@@ -442,12 +443,129 @@ inline bool element::dump_raw_tape(std::ostream &out) const noexcept {
   return tape.doc->dump_raw_tape(out);
 }
 
-inline const document* element::get_document() const noexcept {
-  return tape.doc;
-}
-
 inline size_t element::get_json_index() const noexcept {
   return tape.json_index;
+}
+
+static void update_string(uint64_t *dest_tape, size_t dest_tape_index, std::vector<char> &dest_string_buf, const uint8_t *src_string_buf, uint64_t payload) {
+  uint32_t string_length;
+  std::memcpy(&string_length, src_string_buf+payload, sizeof(uint32_t));
+
+  size_t offset = dest_string_buf.size();
+  dest_string_buf.resize(offset + sizeof(uint32_t) + string_length);
+
+  std::memcpy(dest_string_buf.data()+offset, &string_length, sizeof(uint32_t));
+  offset += sizeof(uint32_t);
+  std::memcpy(dest_string_buf.data()+offset, src_string_buf+payload+sizeof(uint32_t), string_length);
+  offset += string_length;
+
+  dest_tape[dest_tape_index] = (uint64_t('"') << 56) + offset;
+}
+
+static void update_tape(document_context &dc, const uint8_t *src_string_buf) {
+  std::vector<char> dest_string_buf;
+  for (size_t tape_idx = 0; tape_idx < dc.tape_offset; tape_idx++) {
+    uint64_t tape_val = dc.tape[tape_idx];
+    uint8_t type = uint8_t(tape_val >> 56);
+    uint64_t payload = tape_val & internal::JSON_VALUE_MASK;
+
+    if (type == '"') {
+      update_string(dc.tape, tape_idx, dest_string_buf, src_string_buf, payload);
+    }
+  }
+  dc.string_buf = new uint8_t[dest_string_buf.size()];
+  dc.string_buf_offset = dest_string_buf.size();
+  std::memcpy(dc.string_buf, dest_string_buf.data(), dest_string_buf.size());
+}
+
+inline document_context element::get_document_data() const noexcept {
+  size_t json_index = tape.json_index;
+  document_context dc;
+
+  auto &src_tape = tape.doc->tape;
+  auto &src_string_buf = tape.doc->string_buf;
+
+  if (json_index == 1) { // root element
+	  uint64_t tape_val = src_tape[0];
+	  size_t tape_size = size_t(tape_val & simdjson::internal::JSON_VALUE_MASK)+1;
+
+	  dc.tape = src_tape.get();
+	  dc.tape_offset = tape_size;
+
+    dc.string_buf = src_string_buf.get();
+    dc.string_buf_offset = tape.doc->string_buf_size;
+
+    return dc;
+  }
+
+  size_t tape_idx = json_index;
+  uint64_t tape_val = src_tape[tape_idx];
+  uint8_t type = uint8_t(tape_val >> 56);
+  uint64_t payload = tape_val & internal::JSON_VALUE_MASK;
+
+  uint32_t string_length;
+
+  dc.string_buf_offset = 0;
+  dc.tape_offset = 0;
+
+  switch (type) {
+  case '"': // we have a string
+    {
+      std::memcpy(&string_length, src_string_buf.get() + payload, sizeof(uint32_t));
+      dc.tape = new uint64_t[3];
+      dc.tape[dc.tape_offset++] = (uint64_t('r') << 56) + 2;
+      dc.tape[dc.tape_offset++] = uint64_t(type) << 56;
+      dc.tape[dc.tape_offset++] = (uint64_t('r') << 56);
+
+      size_t string_buf_size = sizeof(uint32_t) + string_length;
+      dc.string_buf = new uint8_t[string_buf_size];
+      std::memcpy(dc.string_buf, reinterpret_cast<const char*>(src_string_buf.get()+payload), string_buf_size);
+      dc.string_buf_offset += string_buf_size;
+      break;
+    }
+  case 'l': // we have a long int
+  case 'u': // we have a long uint
+  case 'd': // we have a double
+    dc.tape = new uint64_t[4];
+    dc.tape[dc.tape_offset++] = (uint64_t('r') << 56) + 3;
+    dc.tape[dc.tape_offset++] = src_tape[tape_idx++];
+    dc.tape[dc.tape_offset++] = src_tape[tape_idx++];
+    dc.tape[dc.tape_offset++] = (uint64_t('r') << 56);
+
+    dc.string_buf = new uint8_t[0];
+    break;
+  case 'n': // we have a null
+  case 't': // we have a true
+  case 'f': // we have a false
+    dc.tape = new uint64_t[3];
+    dc.tape[dc.tape_offset++] = (uint64_t('r') << 56) + 2;
+    dc.tape[dc.tape_offset++] = src_tape[tape_idx++];
+    dc.tape[dc.tape_offset++] = (uint64_t('r') << 56);
+    dc.tape_offset++;
+
+    dc.string_buf = new uint8_t[0];
+    break;
+  case '{': // we have an object
+  case '[': // we start an array
+    {
+      size_t tape_size = 2 + uint32_t(payload) - tape_idx;
+      dc.tape = new uint64_t[tape_size];
+      dc.tape[dc.tape_offset++] = (uint64_t('r') << 56) + tape_size - 1;
+      std::memcpy(dc.tape+dc.tape_offset, src_tape.get()+tape_idx, sizeof(uint64_t)*(tape_size-2));
+      dc.tape_offset += tape_size - 2;
+      dc.tape[dc.tape_offset++] = (uint64_t('r') << 56);
+
+      update_tape(dc, src_string_buf.get());
+    }
+    break;
+  case '}': // we end an object
+  case ']': // we end an array
+  case 'r': // we start and end with the root node
+  default:
+    break;
+  }
+
+  return dc;
 }
 
 inline std::ostream& operator<<(std::ostream& out, element_type type) {

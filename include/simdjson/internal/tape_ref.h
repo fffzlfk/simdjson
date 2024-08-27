@@ -10,6 +10,8 @@ class document;
 
 namespace internal {
 
+constexpr const uint64_t JSON_VALUE_MASK = 0x00FFFFFFFFFFFFFF;
+constexpr const uint32_t JSON_COUNT_MASK = 0xFFFFFF;
 /**
  * A reference to an element on the tape. Internal only.
  */
